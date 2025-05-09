@@ -1,33 +1,35 @@
-// pages/profiles.tsx
 'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { useState } from "react";
+import { useRouter } from "next/router";
 
-export default function ProfilesPage() {
-  const [profiles, setProfiles] = useState<any[]>([])
+export default function TelaInicial() {
+  const router = useRouter();
+  const [acao, setAcao] = useState<"login" | "cadastro" | null>(null);
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      const { data, error } = await supabase.from('profiles').select('*')
-      if (error) console.error(error)
-      else setProfiles(data)
-    }
+  function escolherAcao(acaoEscolhida: "login" | "cadastro") {
+    setAcao(acaoEscolhida);
+  }
+  function irParaPagina(tipo: "aluno" | "funcionario") {
+    if (!acao) return;
 
-    fetchProfiles()
-  }, [])
+    const caminho = `/${acao}/${tipo}`;
+    router.push(caminho);
+  }
 
+  
   return (
     <div>
-      <h1>Teste de conexão com Banco de Dados</h1>
-      <ul>
-  {profiles.length === 0 ? (
-    <li>Nenhuma tabela encontrada</li>
-  ) : (
-    profiles.map((profile) => (
-      <li key={profile.id}>{JSON.stringify(profile)}</li>
-    ))
-  )}
-</ul>
+      
+      <p>Você é um?</p>
+      <button onClick={() => escolherAcao("login")}>Login</button>
+      <button onClick={() => escolherAcao("cadastro")}>Cadastro</button>
+
+      {acao && (
+        <div>
+          <button onClick={() => irParaPagina("aluno")}>Aluno</button>
+          <button onClick={() => irParaPagina("funcionario")}>Funcionário</button>
+        </div>
+      )}
     </div>
-  )
+  );
 }
