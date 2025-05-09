@@ -23,11 +23,6 @@ export default function TelaInicial() {
           <a href={`/${acao}/funcionario`}>
             <button>Funcionário</button>
           </a>
-          <h1>Bem-vindo à Página Inicial</h1>
-      <p>Para testar a navegação, clique no link abaixo:</p>
-      <a href="/teste">
-        <button>Ir para a página de teste</button>
-      </a>
         </div>
       )}
     </div>
