@@ -1,33 +1,33 @@
 'use client'
 import { useState } from "react";
-import { useRouter } from "next/router";
 
 export default function TelaInicial() {
-  const router = useRouter();
   const [acao, setAcao] = useState<"login" | "cadastro" | null>(null);
 
   function escolherAcao(acaoEscolhida: "login" | "cadastro") {
     setAcao(acaoEscolhida);
   }
-  function irParaPagina(tipo: "aluno" | "funcionario") {
-    if (!acao) return;
 
-    const caminho = `/${acao}/${tipo}`;
-    router.push(caminho);
-  }
-
-  
   return (
-    <div>
-      
+
+    <div className="">
       <p>Você é um?</p>
       <button onClick={() => escolherAcao("login")}>Login</button>
       <button onClick={() => escolherAcao("cadastro")}>Cadastro</button>
 
       {acao && (
         <div>
-          <button onClick={() => irParaPagina("aluno")}>Aluno</button>
-          <button onClick={() => irParaPagina("funcionario")}>Funcionário</button>
+          <a href={`/${acao}/aluno`}>
+            <button>Aluno</button>
+          </a>
+          <a href={`/${acao}/funcionario`}>
+            <button>Funcionário</button>
+          </a>
+          <h1>Bem-vindo à Página Inicial</h1>
+      <p>Para testar a navegação, clique no link abaixo:</p>
+      <a href="/teste">
+        <button>Ir para a página de teste</button>
+      </a>
         </div>
       )}
     </div>
