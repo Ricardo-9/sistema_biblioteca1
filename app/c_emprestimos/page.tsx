@@ -4,7 +4,7 @@ import {useState} from "react"
 import {supabase} from "@/lib/supabaseClient"
 
 export default function CadastroEditoras(){
-    const [form, setForm] = useState({nome: "", email: "", telefone: ""})
+    const [form, setForm] = useState({nome_l: "", nome_s: "", data_d: ""})
     const [msg, setMsg] = useState("")
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>){
@@ -17,12 +17,12 @@ export default function CadastroEditoras(){
     async function handleSubmit(e: React.FormEvent){
         e.preventDefault()
 
-        const {error} = await supabase.from('editoras').insert([form])
+        const {error} = await supabase.from('emprestimos').insert([form])
         if (error) {
-            setMsg("Não foi possível cadastrar a editora")
+            setMsg("Não foi possível realizar o empréstimo")
           } else {
-            setMsg("Cadastro concluído")
-            setForm({nome: "", email: "", telefone: ""})
+            setMsg("Empréstimo efetuado")
+            setForm({nome_l: "", nome_s: "", data_d: ""})
           }
         }
     
@@ -30,9 +30,9 @@ export default function CadastroEditoras(){
         <div>
             <h1>Cadastro de Editoras</h1>
             <form onSubmit={handleSubmit}>
-                <input type="text" name="nome" onChange={handleChange} value={form.nome} placeholder="Nome"></input>
-                <input type="text" name="email" onChange={handleChange} value={form.email} placeholder="Email"></input>
-                <input type="text" name="telefone" onChange={handleChange} value={form.telefone} placeholder="Telefone"></input>
+                <input type="text" name="nome_l" onChange={handleChange} value={form.nome_l} placeholder="Nome do Livro"></input>
+                <input type="text" name="nome_s" onChange={handleChange} value={form.nome_s} placeholder="Nome do Solicitante"></input>
+                <input type="text" name="data_d" onChange={handleChange} value={form.data_d} placeholder="Data de Devolução"></input>
                 <button type="submit">Cadastrar</button>
             </form>
             {msg && <p>{msg}</p>}
