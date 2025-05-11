@@ -1,3 +1,6 @@
+// Tela de cadastro de funcionários funcional. A tela valida se todos os campos
+// foram preenchidos antes de enviar os dados ao Supabase e exibe mensagens 
+// de sucesso ou erro conforme o resultado do cadastro.
 'use client'
 
 import { useState } from 'react'
@@ -19,7 +22,7 @@ export default function CadastroFuncionario() {
   const [mensagem, setMensagem] = useState('')
 
 
-  function handleChange(e: any) {
+  function handleChange(e:React.ChangeEvent<HTMLInputElement>) {
     setForm({
       ...form,
       [e.target.name]: e.target.value
@@ -29,7 +32,14 @@ export default function CadastroFuncionario() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    const { error } = await supabase.from('alunos').insert([form])
+    const camposVazios = Object.entries(form).filter(([chave, valor]) => valor.trim() === '');
+
+    if (camposVazios.length > 0) {
+    setMensagem('Por favor, preencha todos os campos.');
+    return;
+}
+
+    const { error } = await supabase.from('funcionarios').insert([form])
 
     if (error) {
       setMensagem('Erro ao cadastrar funcionário: ' + error.message)
@@ -81,7 +91,7 @@ export default function CadastroFuncionario() {
 
         <div>
           <label>Email</label>
-          <input name="email" value={form.email} onChange={handleChange} />
+          <input type="email"name="email" value={form.email} onChange={handleChange} />
         </div>
 
         <div>
@@ -91,7 +101,7 @@ export default function CadastroFuncionario() {
 
         <div>
           <label>Senha</label>
-          <input name="senha" value={form.senha} onChange={handleChange} />
+          <input type="password" name="senha" value={form.senha} onChange={handleChange} />
         </div>
 
         <button type="submit">Cadastrar</button>

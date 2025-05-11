@@ -1,3 +1,7 @@
+
+
+
+
 'use client'
 
 import { useState } from 'react'
@@ -78,6 +82,9 @@ export default function Login() {
 
         <button type="submit">Entrar</button>
       </form>
+      <button type="button" onClick={() => window.location.href = '/redefinir-senha'}>
+    Esqueceu a senha?
+  </button>
 
       {mensagem && <p>{mensagem}</p>}
     </div>

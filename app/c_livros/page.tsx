@@ -1,3 +1,6 @@
+// Tela de cadastro de livros funcional. A tela valida se todos os campos
+// foram preenchidos antes de enviar os dados ao Supabase e exibe mensagens 
+// de sucesso ou erro conforme o resultado do cadastro.
 'use client'
 
 import { useState } from 'react'
@@ -25,6 +28,13 @@ export default function CadastroLivros() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    const camposVazios = Object.entries(form).filter(([chave, valor]) => valor.trim() === '');
+
+    if (camposVazios.length > 0) {
+    setMensagem('Por favor, preencha todos os campos.');
+    return;
+}
 
     const { error } = await supabase.from('livros').insert([form])
 
