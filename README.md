@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+📚 Sistema de Biblioteca Escolar
+Este é um sistema de gerenciamento de biblioteca desenvolvido para uso interno em uma escola. A aplicação permite o cadastro e login de alunos e funcionários, controle de reservas e empréstimos de livros, e gerenciamento de dados relacionados.
 
-## Getting Started
+🧾 Descrição do Projeto
+O sistema possibilita:
 
-First, run the development server:
+-Cadastro e login de alunos e funcionários ;
+-Cadastro de editoras e livros , com controle de quantidade disponível ;
+-Registro de empréstimos de livros , com verificação de disponibilidade;
+-Validação de campos obrigatórios nos formulários;
+-Redefinição de senha para usuários.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+🛠️ Tecnologias Utilizadas
+-Next.js (React com suporte SSR e rotas automáticas)
+-TypeScript (tipagem estática para maior segurança)
+-Supabase (backend com banco de dados PostgreSQL e autenticação)
+-CSS/HTML básico (com possibilidade de melhorias em UI/UX)
+-Fetch API /hooks para chamadas assíncronas ao banco
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+🔐 Autenticação
+A autenticação é feita verificando o e-mail e a senha nas tabelas alunose funcionariosdo Supabase.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+🧭 Navegação pelas páginas
+-/: Tela inicial com seleção de login ou cadastro
+-/login: Login geral com detecção de tipo de usuário
+-/cadastro/aluno: Cadastro de novos alunos
+-/cadastro/funcionario: Cadastro de novos funcionários
+-/c_livros: Cadastro de novos livros
+-/c_emprestimos: Cadastro de novos empréstimos
+-/c_editoras: Cadastro de novas editoras
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
