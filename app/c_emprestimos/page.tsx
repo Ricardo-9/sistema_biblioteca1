@@ -1,41 +1,111 @@
 'use client'
 
-import {useState} from "react"
-import {supabase} from "@/lib/supabaseClient"
+import { useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
 
-export default function CadastroEditoras(){
-    const [form, setForm] = useState({nome_l: "", nome_s: "", data_d: ""})
-    const [msg, setMsg] = useState("")
+export default function CadastroEmprestimos() {
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>){
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        })
+  const [form, setForm] = useState({
+    nome_livro: "",
+    nome_pessoa: "",
+    data_devolucao: ""
+  });
+
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const verificarLivro = async () => {
+    const { data, error } = await supabase
+      .from('livros')
+      .select('id')
+      .ilike('nome', form.nome_livro)
+      .maybeSingle();
+
+    if (error || !data) {
+      return false;
+    }
+    return true;
+  };
+
+  const verificarSolicitante = async () => {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id')
+      .ilike('nome', form.nome_pessoa)
+      .maybeSingle();
+
+    if (error || !data) {
+      return false;
+    }
+    return true;
+  };
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const livroValido = await verificarLivro();
+    const solicitanteValido = await verificarSolicitante();
+
+    if (!livroValido || !solicitanteValido) {
+      setMsg("Livro ou usuário não cadastrado");
+      return;
     }
 
-    async function handleSubmit(e: React.FormEvent){
-        e.preventDefault()
+    const { error } = await supabase.from('emprestimos').insert([form]);
 
-        const {error} = await supabase.from('emprestimos').insert([form])
-        if (error) {
-            setMsg("Não foi possível realizar o empréstimo")
-          } else {
-            setMsg("Empréstimo efetuado")
-            setForm({nome_l: "", nome_s: "", data_d: ""})
-          }
-        }
-    
-    return(
+    if (error) {
+      setMsg("Ocorreu um erro ao cadastrar o empréstimo.");
+    } else {
+      setMsg("Empréstimo efetuado com sucesso.");
+      setForm({ nome_livro: "", nome_pessoa: "", data_devolucao: "" });
+    }
+  }
+
+  return (
+    <div>
+      <h1>Cadastro de Empréstimos</h1>
+      <form onSubmit={handleSubmit}>
         <div>
-            <h1>Cadastro de Editoras</h1>
-            <form onSubmit={handleSubmit}>
-                <input type="text" name="nome_l" onChange={handleChange} value={form.nome_l} placeholder="Nome do Livro"></input>
-                <input type="text" name="nome_s" onChange={handleChange} value={form.nome_s} placeholder="Nome do Solicitante"></input>
-                <input type="text" name="data_d" onChange={handleChange} value={form.data_d} placeholder="Data de Devolução"></input>
-                <button type="submit">Cadastrar</button>
-            </form>
-            {msg && <p>{msg}</p>}
+          <label htmlFor="nome_livro">Nome do Livro: </label>
+          <input
+            type="text"
+            name="nome_livro"
+            value={form.nome_livro}
+            onChange={handleChange}
+            required
+          />
         </div>
-    )
+        <div>
+          <label htmlFor="nome_pessoa">Nome do Solicitante: </label>
+          <input
+            type="text"
+            name="nome_pessoa"
+            value={form.nome_pessoa}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="data_devolucao">Data de Devolução: </label>
+          <input
+            type="date"
+            name="data_devolucao"
+            value={form.data_devolucao}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <button type="submit">Cadastrar</button>
+        </div>
+      </form>
+      {msg && <p>{msg}</p>}
+    </div>
+  );
 }
