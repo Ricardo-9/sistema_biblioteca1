@@ -8,36 +8,10 @@ export default function CadastroEmprestimos() {
   const [form, setForm] = useState({
     nome_livro: "",
     nome_pessoa: "",
-    data_devolucao: ""
   });
 
   const [msg, setMsg] = useState<string | null>(null);
-
-  const verificarLivro = async () => {
-    const { data, error } = await supabase
-      .from('livros')
-      .select('id')
-      .ilike('nome', form.nome_livro)
-      .maybeSingle();
-
-    if (error || !data) {
-      return false;
-    }
-    return true;
-  };
-
-  const verificarSolicitante = async () => {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('id')
-      .ilike('nome', form.nome_pessoa)
-      .maybeSingle();
-
-    if (error || !data) {
-      return false;
-    }
-    return true;
-  };
+  const [dataDevolucaoFormatada, setDataDevolucaoFormatada] = useState<string | null>(null);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({
@@ -49,21 +23,49 @@ export default function CadastroEmprestimos() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const livroValido = await verificarLivro();
-    const solicitanteValido = await verificarSolicitante();
+    const { data: livro, error: erroLivro } = await supabase
+      .from('livros')
+      .select('id')
+      .ilike('nome', form.nome_livro)
+      .maybeSingle();
 
-    if (!livroValido || !solicitanteValido) {
+    const { data: usuario, error: erroUsuario } = await supabase
+      .from('usuarios')
+      .select('id')
+      .ilike('nome', form.nome_pessoa)
+      .maybeSingle();
+
+    if (erroLivro || !livro || erroUsuario || !usuario) {
       setMsg("Livro ou usuário não cadastrado");
+      setDataDevolucaoFormatada(null);
       return;
     }
 
-    const { error } = await supabase.from('emprestimos').insert([form]);
+    const dataEmprestimo = new Date();
+    const dataDevolucao = new Date();
+    dataDevolucao.setDate(dataEmprestimo.getDate() + 30);
+
+    const { error } = await supabase.from('emprestimos').insert([
+      {
+        nome_livro: livro.id,
+        nome_pessoa: usuario.id,
+        data_devolucao: dataDevolucao.toISOString()
+      }
+    ]);
 
     if (error) {
       setMsg("Ocorreu um erro ao cadastrar o empréstimo.");
+      setDataDevolucaoFormatada(null);
     } else {
+      const devolucaoFormatada = dataDevolucao.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
       setMsg("Empréstimo efetuado com sucesso.");
-      setForm({ nome_livro: "", nome_pessoa: "", data_devolucao: "" });
+      setDataDevolucaoFormatada(devolucaoFormatada);
+      setForm({ nome_livro: "", nome_pessoa: "" });
     }
   }
 
@@ -92,20 +94,14 @@ export default function CadastroEmprestimos() {
           />
         </div>
         <div>
-          <label htmlFor="data_devolucao">Data de Devolução: </label>
-          <input
-            type="date"
-            name="data_devolucao"
-            value={form.data_devolucao}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
           <button type="submit">Cadastrar</button>
         </div>
       </form>
+
       {msg && <p>{msg}</p>}
+      {dataDevolucaoFormatada && (
+        <p>Data limite para devolução: <strong>{dataDevolucaoFormatada}</strong></p>
+      )}
     </div>
   );
 }
