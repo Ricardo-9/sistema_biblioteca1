@@ -21,54 +21,69 @@ export default function CadastroEmprestimos() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const { data: livro, error: erroLivro } = await supabase
-      .from('livros')
-      .select('id')
-      .ilike('nome', form.nome_livro)
-      .maybeSingle();
+  const { data: livro, error: erroLivro } = await supabase
+    .from('livros')
+    .select('id, quantidade')
+    .ilike('nome', form.nome_livro)
+    .maybeSingle();
 
-    const { data: usuario, error: erroUsuario } = await supabase
-      .from('usuarios')
-      .select('id')
-      .ilike('nome', form.nome_pessoa)
-      .maybeSingle();
+  const { data: usuario, error: erroUsuario } = await supabase
+    .from('usuarios')
+    .select('id')
+    .ilike('nome', form.nome_pessoa)
+    .maybeSingle();
 
-    if (erroLivro || !livro || erroUsuario || !usuario) {
-      setMsg("Livro ou usuário não cadastrado");
-      setDataDevolucaoFormatada(null);
-      return;
-    }
-
-    const dataEmprestimo = new Date();
-    const dataDevolucao = new Date();
-    dataDevolucao.setDate(dataEmprestimo.getDate() + 30);
-
-    const { error } = await supabase.from('emprestimos').insert([
-      {
-        nome_livro: livro.id,
-        nome_pessoa: usuario.id,
-        data_devolucao: dataDevolucao.toISOString()
-      }
-    ]);
-
-    if (error) {
-      setMsg("Ocorreu um erro ao cadastrar o empréstimo.");
-      setDataDevolucaoFormatada(null);
-    } else {
-      const devolucaoFormatada = dataDevolucao.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-
-      setMsg("Empréstimo efetuado com sucesso.");
-      setDataDevolucaoFormatada(devolucaoFormatada);
-      setForm({ nome_livro: "", nome_pessoa: "" });
-    }
+  if (erroLivro || !livro || erroUsuario || !usuario) {
+    setMsg("Livro ou usuário não cadastrado");
+    setDataDevolucaoFormatada(null);
+    return;
   }
 
+  if (livro.quantidade <= 0) {
+    setMsg("Não há livros disponíveis para empréstimo");
+    setDataDevolucaoFormatada(null);
+    return;
+  }
+
+  const dataEmprestimo = new Date();
+  const dataDevolucao = new Date();
+  dataDevolucao.setDate(dataEmprestimo.getDate() + 30);
+
+  const { error } = await supabase.from('emprestimos').insert([{
+    nome_livro: livro.id,
+    nome_pessoa: usuario.id,
+    data_devolucao: dataDevolucao.toISOString(),
+  }]);
+
+  if (error) {
+    setMsg("Ocorreu um erro ao cadastrar o empréstimo.");
+    setDataDevolucaoFormatada(null);
+    return;
+  }
+
+  const { error: erroAtualizacao } = await supabase
+    .from('livros')
+    .update({ quantidade: livro.quantidade - 1 })
+    .eq('id', livro.id);
+
+  if (erroAtualizacao) {
+    setMsg("Ocorreu um erro ao atualizar a quantidade de livros.");
+    setDataDevolucaoFormatada(null);
+    return;
+  }
+
+  const devolucaoFormatada = dataDevolucao.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  setMsg("Empréstimo efetuado com sucesso.");
+  setDataDevolucaoFormatada(devolucaoFormatada);
+  setForm({ nome_livro: "", nome_pessoa: "" });
+}
   return (
     <div>
       <h1>Cadastro de Empréstimos</h1>
