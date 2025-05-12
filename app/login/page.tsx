@@ -1,92 +1,83 @@
-
-
-
-
 'use client'
+import { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient'; 
 
-import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-export default function Login() {
-  const [form, setForm] = useState({
-    email: '',
-    senha: '',
-  })
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const [mensagem, setMensagem] = useState('')
-
-  function handleChange(e: any) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    })
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const { email, senha } = form
-
-    
-    const { data: aluno } = await supabase
-      .from('alunos')
-      .select('*')
-      .eq('email', email)
-      .single()
-
-    const { data: funcionario } = await supabase
-      .from('funcionarios')
-      .select('*')
-      .eq('email', email)
-      .single()
-
-    const usuario = aluno || funcionario
-
-    if (!usuario) {
-      setMensagem('Email não encontrado.')
-      return
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos.');
+      return;
     }
 
-    if (usuario.senha !== senha) {
-      setMensagem('Senha incorreta.')
-      return
-    }
+    setLoading(true);
+    setError('');
 
-    setMensagem('Login bem-sucedido!')
-    window.location.href = '/teste' 
-  }
+    try {
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) {
+        setError(loginError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        
+        window.location.href = '/cadastro/aluno'; 
+      }
+    } catch (err) {
+      setError('Erro inesperado. Tente novamente.');
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
+    <div className="container">
       <h1>Login</h1>
-
-      <form onSubmit={handleSubmit}>
+      {error && <div className="error">{error}</div>}
+      
+      <form onSubmit={handleLogin}>
         <div>
-          <label>Email</label>
+          <label htmlFor="email">E-mail</label>
           <input
             type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
-
         <div>
-          <label>Senha</label>
+          <label htmlFor="password">Senha</label>
           <input
             type="password"
-            name="senha"
-            value={form.senha}
-            onChange={handleChange}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
-
-        <button type="submit">Entrar</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Carregando...' : 'Entrar'}
+        </button>
       </form>
-      <button type="button" onClick={() => window.location.href = '/redefinir-senha'}>
-    Esqueceu a senha?
-  </button>
 
-      {mensagem && <p>{mensagem}</p>}
+      <p>
+        Não tem uma conta?{' '}
+        <a href="/signup">Cadastre-se</a>
+      </p>
     </div>
-  )
-}
+  );
+};
+
+export default Login;

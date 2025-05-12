@@ -1,118 +1,97 @@
-// Tela de cadastro de alunos funcional. A tela valida se todos os campos
-// foram preenchidos antes de enviar os dados ao Supabase e exibe mensagens 
-// de sucesso ou erro conforme o resultado do cadastro.
 'use client'
+import { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 
-import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
 
-export default function CadastroAluno() {
-  const [form, setForm] = useState({
-    nome: '',
-    cpf: '',
-    matricula: '',
-    endereco: '',
-    email: '',
-    telefone: '',
-    serie: '',
-    curso: '',
-    senha : ''
-  })
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const [mensagem, setMensagem] = useState('')
-
-
-  function handleChange(e:React.ChangeEvent<HTMLInputElement>) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    })
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    const camposVazios = Object.entries(form).filter(([chave, valor]) => valor.trim() === '');
-
-    if (camposVazios.length > 0) {
-    setMensagem('Por favor, preencha todos os campos.');
-    return;
-}
-
-    const { error } = await supabase.from('alunos').insert([form])
-
-    if (error) {
-      setMensagem('Erro ao cadastrar aluno: ' + error.message)
-    } else {
-      setMensagem('Aluno cadastrado com sucesso!')
-      setForm({
-        nome: '',
-        cpf: '',
-        matricula: '',
-        endereco: '',
-        email: '',
-        telefone: '',
-        serie: '',
-        curso: '',
-        senha : ''
-      })
+    if (!email || !password || !name) {
+      setError('Todos os campos são obrigatórios');
+      return;
     }
-  }
+
+    try {
+      // Criando o usuário no Supabase
+      const { data: user, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signupError) {
+        setError(signupError.message);
+        return;
+      }
+
+      // Verificando se o usuário foi criado com sucesso
+      if (user) {
+        console.log('Usuário criado:', user);  // Verifique o conteúdo do usuário
+
+        // Inserindo dados adicionais do usuário na tabela "profiles"
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .upsert(
+            [
+              { user_id: user.id, name: name }
+            ], 
+            { onConflict: ['user_id'] }  // Passando 'user_id' como uma string
+          );
+
+        if (insertError) {
+          setError('Erro ao salvar o perfil: ' + insertError.message);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Erro inesperado, tente novamente.');
+    }
+  };
 
   return (
-    <div>
-      <h1>Cadastro de Aluno</h1>
-
-      <form onSubmit={handleSubmit}>
+    <div className="container">
+      <h1>Cadastro</h1>
+      {error && <div className="error">{error}</div>}
+      <form onSubmit={handleSignup}>
         <div>
-          <label>Nome</label>
-          <input name="nome" value={form.nome} onChange={handleChange} />
+          <label htmlFor="name">Nome</label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
         </div>
-
         <div>
-          <label>CPF</label>
-          <input name="cpf" value={form.cpf} onChange={handleChange} />
+          <label htmlFor="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-
         <div>
-          <label>Matrícula</label>
-          <input name="matricula" value={form.matricula} onChange={handleChange} />
+          <label htmlFor="password">Senha</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
-
-        <div>
-          <label>Endereço</label>
-          <input name="endereco" value={form.endereco} onChange={handleChange} />
-        </div>
-
-        <div>
-          <label>Email</label>
-          <input type="email" name="email" value={form.email} onChange={handleChange} />
-        </div>
-
-        <div>
-          <label>Telefone</label>
-          <input name="telefone" value={form.telefone} onChange={handleChange} />
-        </div>
-
-        <div>
-          <label>Série</label>
-          <input name="serie" value={form.serie} onChange={handleChange} />
-        </div>
-
-        <div>
-          <label>Curso</label>
-          <input name="curso" value={form.curso} onChange={handleChange} />
-        </div>
-
-        <div>
-          <label>Senha</label>
-          <input type="password"name="senha" value={form.senha} onChange={handleChange} />
-        </div>
-
         <button type="submit">Cadastrar</button>
       </form>
-
-      {mensagem && <p>{mensagem}</p>}
     </div>
-  )
-}
+  );
+};
+
+export default Signup;
