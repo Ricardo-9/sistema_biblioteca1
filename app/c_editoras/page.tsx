@@ -11,10 +11,8 @@ export default function CadastroEditoras() {
     let { name, value } = e.target;
 
     if (name === "telefone") {
-      // Remove todos os caracteres que não são números
       value = value.replace(/\D/g, "");
 
-      // Adiciona a formatação: (XX) X XXXX-XXXX
       if (value.length > 0) {
         value = value.replace(/^(\d{2})(\d)/, "($1) $2");
       }
@@ -32,11 +30,25 @@ export default function CadastroEditoras() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Valida se o telefone está completo (15 caracteres no formato esperado)
     if (form.telefone.length < 15) {
       setMsg("Telefone incompleto");
       return;
     }
+    
+    const { data: livrosExistentes, error: fetchError } = await supabase
+        .from('editoras')
+        .select('nome')
+        .eq('nome', form.nome)
+  
+      if (fetchError) {
+        setMsg('Erro ao verificar editora existente: ' + fetchError.message)
+        return
+      }
+  
+      if (livrosExistentes.length > 0) {
+        setMsg('Já existe uma editora com esse nome cadastrado.')
+        return
+      }
 
     const { error } = await supabase.from('editoras').insert([form]);
 
