@@ -17,11 +17,6 @@ async function handleSubmit(e: React.FormEvent) {
 
     
 }
-
-
-
-
-
     return(
         <div>
             <div>
