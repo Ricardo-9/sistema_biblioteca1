@@ -25,7 +25,7 @@ export default function CadastroEmprestimos() {
 
   const { data: livro, error: erroLivro } = await supabase
     .from('livros')
-    .select('id, quantidade')
+    .select('id, q_disponivel')
     .ilike('nome', form.nome_livro)
     .maybeSingle();
 
@@ -41,7 +41,7 @@ export default function CadastroEmprestimos() {
     return;
   }
 
-  if (livro.quantidade <= 0) {
+  if (livro.q_disponivel <= 0) {
     setMsg("Não há livros disponíveis para empréstimo");
     setDataDevolucaoFormatada(null);
     return;
@@ -65,7 +65,7 @@ export default function CadastroEmprestimos() {
 
   const { error: erroAtualizacao } = await supabase
     .from('livros')
-    .update({ quantidade: livro.quantidade - 1 })
+    .update({ q_disponivel: livro.q_disponivel - 1 })
     .eq('id', livro.id);
 
   if (erroAtualizacao) {

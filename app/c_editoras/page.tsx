@@ -2,39 +2,43 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import Cleave from "cleave.js/react";
 
 export default function CadastroEditoras() {
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
   const [msg, setMsg] = useState("");
 
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     let { name, value } = e.target;
 
-    if (name === "telefone") {
-      // Remove todos os caracteres que não são números
-      value = value.replace(/\D/g, "");
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
 
-      // Adiciona a formatação: (XX) X XXXX-XXXX
-      if (value.length > 0) {
-        value = value.replace(/^(\d{2})(\d)/, "($1) $2");
-      }
-      if (value.length >= 7) {
-        value = value.replace(/(\d{1})(\d{4})(\d{4}).*/, "$1 $2-$3");
-      }
-    }
-
-    setForm({
-      ...form,
-      [name]: value
-    });
+  function handleTelefoneChange(e: any) {
+    setForm({ ...form, telefone: e.target.value })
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Valida se o telefone está completo (15 caracteres no formato esperado)
     if (form.telefone.length < 15) {
       setMsg("Telefone incompleto");
+      return;
+    }
+
+    const { data: editorasExistentes, error: fetchError } = await supabase
+      .from('editoras')
+      .select('nome')
+      .eq('nome', form.nome);
+
+    if (fetchError) {
+      setMsg('Erro ao verificar editora existente: ' + fetchError.message);
+      return;
+    }
+
+    if (editorasExistentes.length > 0) {
+      setMsg('Já existe uma editora com esse nome cadastrado.');
       return;
     }
 
@@ -68,13 +72,12 @@ export default function CadastroEditoras() {
           placeholder="Email"
           required
         />
-        <input
-          type="text"
-          name="telefone"
-          onChange={handleChange}
-          value={form.telefone}
-          placeholder="Telefone"
-          required
+        <Cleave name="telefone" onChange={handleTelefoneChange} placeholder="Telefone"
+          options={{
+          delimiters: ['(', ') ', '-', '-'],
+          blocks: [0, 2, 5, 4],
+          numericOnly: true
+          }}
         />
         <button type="submit">Cadastrar</button>
       </form>

@@ -1,10 +1,8 @@
-// Tela de cadastro de livros funcional. A tela valida se todos os campos
-// foram preenchidos antes de enviar os dados ao Supabase e exibe mensagens 
-// de sucesso ou erro conforme o resultado do cadastro.
 'use client'
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import Cleave from 'cleave.js/react'
 
 export default function CadastroLivros() {
   const [form, setForm] = useState({
@@ -13,11 +11,10 @@ export default function CadastroLivros() {
     categoria: '',
     isbn: '',
     autor: '',
-    q_disponivel : ''
-  } )
+    q_disponivel: ''
+  })
 
   const [mensagem, setMensagem] = useState('')
-
 
   function handleChange(e: any) {
     setForm({
@@ -25,30 +22,66 @@ export default function CadastroLivros() {
       [e.target.name]: e.target.value
     })
   }
+  function handleIsbnChange(e: any) {
+    setForm({ ...form, isbn: e.target.value })
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    const camposVazios = Object.entries(form).filter(([chave, valor]) => valor.trim() === '');
-
+    const camposVazios = Object.entries(form).filter(([chave, valor]) => valor.trim() === '')
     if (camposVazios.length > 0) {
-    setMensagem('Por favor, preencha todos os campos.');
-    return;
-}
+      setMensagem('Por favor, preencha todos os campos.')
+      return
+    }
+
+    const { data: livrosExistentes, error: fetchError } = await supabase
+      .from('livros')
+      .select('isbn')
+      .eq('isbn', form.isbn)
+
+    if (fetchError) {
+      setMensagem('Erro ao verificar ISBN existente: ' + fetchError.message)
+      return
+    }
+
+    if (livrosExistentes.length > 0) {
+      setMensagem('Já existe um livro com esse ISBN cadastrado.')
+      return
+    }
+
+    const isbnLimpo = form.isbn.replace(/[^0-9]/g, '')
+    if (isbnLimpo.length !== 13) {
+      setMensagem('O campo ISBN deve estar completamente preenchido.')
+      return
+    }
+
+    const ano = parseInt(form.ano_publicacao, 10)
+    const anoAtual = new Date().getFullYear()
+    if (isNaN(ano) || ano < 1000 || ano > anoAtual) {
+      setMensagem(`Ano de publicação inválido. Digite um ano entre 1000 e ${anoAtual}.`)
+      return
+    }
+
+    const quantidade = parseInt(form.q_disponivel, 10)
+    if (isNaN(quantidade) || quantidade < 0) {
+      setMensagem('Quantidade deve ser um número inteiro não negativo.')
+      return
+    }
 
     const { error } = await supabase.from('livros').insert([form])
 
     if (error) {
       setMensagem('Erro ao cadastrar livro: ' + error.message)
     } else {
-      setMensagem('livro cadastrado com sucesso!')
+      setMensagem('Livro cadastrado com sucesso!')
       setForm({
         nome: '',
         ano_publicacao: '',
         categoria: '',
         isbn: '',
         autor: '',
-        q_disponivel : ''
+        q_disponivel: ''
       })
     }
   }
@@ -59,35 +92,61 @@ export default function CadastroLivros() {
 
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Nome </label>
+          <label>Nome</label>
           <input name="nome" value={form.nome} onChange={handleChange} />
         </div>
 
         <div>
-          <label>ano de publicacao</label>
-          <input name="ano_publicacao" value={form.ano_publicacao} onChange={handleChange} />
+          <label>Ano de Publicação</label>
+          <input
+            name="ano_publicacao"
+            value={form.ano_publicacao}
+            onChange={handleChange}
+            type="number"
+            min={1000}
+            max={new Date().getFullYear()}
+          />
         </div>
 
         <div>
-          <label>categoria</label>
-          <input name="categoria" value={form.categoria} onChange={handleChange} />
+          <label>Categoria</label>
+          <input name="categoria" value={form.categoria} onChange={handleChange}/>
         </div>
 
         <div>
-          <label>isbn</label>
-          <input name="isbn" value={form.isbn} onChange={handleChange} />
+          <label>ISBN</label>
+          <Cleave
+            name="isbn"
+            value={form.isbn}
+            onChange={handleIsbnChange}
+            options={{
+              delimiters: ['-', '-', '-', '-'],
+              blocks: [3, 1, 2, 6, 1],
+              numericOnly: true
+            }}
+          />
         </div>
 
         <div>
-          <label>autor</label>
+          <label>Autor</label>
           <input name="autor" value={form.autor} onChange={handleChange} />
         </div>
+
         <div>
-          <label>Quantidade </label>
-          <input name="q_disponivel" value={form.q_disponivel} onChange={handleChange} />
+          <label>Quantidade</label>
+          <input
+            name="q_disponivel"
+            value={form.q_disponivel}
+            onChange={handleChange}
+            type="number"
+            min={0}
+          
+          />
         </div>
 
-        <button type="submit">Cadastrar</button>
+        <button type="submit" className='border-2'>
+          Cadastrar
+        </button>
       </form>
 
       {mensagem && <p>{mensagem}</p>}
