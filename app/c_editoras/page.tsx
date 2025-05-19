@@ -12,21 +12,11 @@ export default function CadastroEditoras() {
 
     if (name === "telefone") {
       value = value.replace(/\D/g, "");
-
+    }
       if (value.length > 0) {
         value = value.replace(/^(\d{2})(\d)/, "($1) $2");
       }
-      if (value.length >= 7) {
-        value = value.replace(/(\d{1})(\d{4})(\d{4}).*/, "$1 $2-$3");
-      }
-    }
-
-    setForm({
-      ...form,
-      [name]: value
-    });
-  }
-
+      
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -93,4 +83,5 @@ export default function CadastroEditoras() {
       {msg && <p>{msg}</p>}
     </div>
   );
+}
 }
